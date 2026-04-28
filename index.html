@@ -46,12 +46,7 @@
 
     .biller { font-size: 18px; font-weight: bold; }
 
-    .due-label {
-      font-size: 13px;
-      font-weight: bold;
-      margin-top: 8px;
-    }
-
+    .due-label { font-size: 13px; font-weight: bold; margin-top: 8px; }
     .overdue-text { color: #d93025; }
     .upcoming-text { color: #8a6500; }
 
@@ -62,7 +57,6 @@
       padding: 10px 14px;
       border-radius: 8px;
       text-align: center;
-      white-space: nowrap;
       border: none;
       cursor: pointer;
       font-size: 15px;
@@ -79,38 +73,22 @@
       box-sizing: border-box;
     }
 
-    label {
-      font-size: 14px;
-      font-weight: bold;
-      color: #444;
-    }
-
-    .field {
-      display: flex;
-      flex-direction: column;
-      gap: 5px;
-    }
+    label { font-size: 14px; font-weight: bold; color: #444; }
 
     .money-box { position: relative; }
-
     .money-box span {
       position: absolute;
       left: 10px;
       top: 50%;
       transform: translateY(-50%);
-      color: #555;
       font-weight: bold;
     }
-
     .money-box input { padding-left: 24px; }
 
     .check-row {
       margin-top: 10px;
       display: flex;
-      justify-content: flex-start;
-      align-items: center;
       gap: 20px;
-      width: 100%;
       flex-wrap: wrap;
     }
 
@@ -120,381 +98,238 @@
       gap: 8px;
     }
 
-    .check-item input {
-      width: auto;
-    }
+    .check-item input { width: auto; }
 
     .notes { margin-top: 10px; }
-    .status { text-align: center; color: #666; margin: 15px 0; }
-    .save-msg { font-size: 13px; color: #357a38; margin-top: 8px; display: none; }
-    .add-status { text-align: center; margin-top: 10px; color: #357a38; display: none; }
 
     @media (max-width: 700px) {
       .row, .bank-row, .add-grid { grid-template-columns: 1fr; }
-      a.pay-button { display: block; }
     }
   </style>
 </head>
 
 <body>
-  <div class="container">
-    <h1>Polly's Bills</h1>
-    <div class="subtitle">Bill links, due dates, and payment amounts</div>
-
-    <div id="status" class="status">Loading bills...</div>
-    <div id="app"></div>
-
-    <section>
-      <h2>Add New Account</h2>
-
-      <div class="add-card">
-        <div class="add-grid">
-          <div class="field">
-            <label>Type</label>
-            <select id="newCategory" onchange="toggleNewFields()">
-              <option value="Bills">Bill</option>
-              <option value="Bank Accounts">Bank Account</option>
-            </select>
-          </div>
-
-          <div class="field">
-            <label>Name</label>
-            <input id="newBiller" type="text">
-          </div>
-
-          <div class="field">
-            <label>Website</label>
-            <input id="newWebsite" type="text">
-          </div>
-
-          <div class="field bill-only">
-            <label>Due Date</label>
-            <input id="newDueDate" type="date">
-          </div>
-
-          <div class="field bill-only">
-            <label>Amount</label>
-            <div class="money-box">
-              <span>$</span>
-              <input id="newAmount" type="number" step="0.01">
-            </div>
-          </div>
-
-          <div class="field bill-only">
-            <label>AutoPay</label>
-            <select id="newAutoPay">
-              <option value="FALSE">No</option>
-              <option value="TRUE">Yes</option>
-            </select>
-          </div>
-
-          <div class="field">
-            <label>Notes</label>
-            <input id="newNotes" type="text">
-          </div>
-        </div>
-
-        <button onclick="addNewAccount()">Add Account</button>
-        <div id="addStatus" class="add-status">Added successfully</div>
-      </div>
-    </section>
-  </div>
-
-  <script>
-    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyrQvUJoyFMkGR5WERF3W4U4TNaab8yXdiVbHPW7eD_BwkJSSLHMpGpDnfN2ERZB0NnZw/exec";
-
-    const app = document.getElementById("app");
-    const statusBox = document.getElementById("status");
-
-    function loadBills() {
-      fetch(SCRIPT_URL)
-        .then(response => response.json())
-        .then(data => {
-          autoAdvanceAutopayBills(data);
-          statusBox.textContent = "";
-          renderBills(data);
-        })
-        .catch(error => {
-          statusBox.textContent = "Could not load bills.";
-          console.error(error);
-        });
-    }
-
-    function renderBills(items) {
-      app.innerHTML = "";
-
-      const categories = [...new Set(items.map(item => item.Category))];
-
-      categories.forEach(category => {
-        const section = document.createElement("section");
-        section.innerHTML = `<h2>${category}</h2>`;
-
-        let categoryItems = items.filter(item => item.Category === category);
-
-        if (category === "Bills") {
-          categoryItems.sort((a, b) => {
-            const dateA = getDateValue(a.DueDate);
-            const dateB = getDateValue(b.DueDate);
-            if (!dateA && !dateB) return 0;
-            if (!dateA) return 1;
-            if (!dateB) return -1;
-            return dateA - dateB;
-          });
-        }
-
-        categoryItems.forEach(item => {
-          const card = document.createElement("div");
-          card.className = "card";
-
-          if (category === "Bank Accounts") {
-            card.innerHTML = `
-              <div class="bank-row">
-                <div class="biller">${item.Biller || ""}</div>
-                ${item.Website ? `<a class="pay-button" href="${item.Website}" target="_blank">Visit Website</a>` : ""}
-              </div>
-
-              <div class="notes">
-                <input type="text" value="${item.Notes || ""}"
-                onchange="saveField('${item.ID}','Notes',this.value,this)">
-              </div>
-
-              <div class="save-msg">Saved</div>
-            `;
-          } else {
-            const paid = String(item.Paid).toUpperCase() === "TRUE";
-            const autopay = String(item.AutoPay).toUpperCase() === "TRUE";
-            const dueStatus = getDueStatus(item.DueDate, paid);
-
-            if (dueStatus.type === "overdue") card.classList.add("overdue");
-            if (dueStatus.type === "upcoming") card.classList.add("upcoming");
-            if (paid) card.classList.add("paid-card");
-
-            card.innerHTML = `
-              <div class="row">
-                <div class="biller">${item.Biller || ""}</div>
-
-                <input type="date" value="${formatDate(item.DueDate)}"
-                onchange="saveField('${item.ID}','DueDate',this.value,this)">
-
-                <div class="money-box">
-                  <span>$</span>
-                  <input type="number" step="0.01" value="${item.Amount || ""}"
-                  onchange="saveField('${item.ID}','Amount',this.value,this)">
-                </div>
-
-                ${item.Website ? `<a class="pay-button" href="${item.Website}" target="_blank">Visit Website</a>` : ""}
-              </div>
-
-              ${dueStatus.message ? `<div class="due-label ${dueStatus.className}">${dueStatus.message}</div>` : ""}
-
-              <div class="check-row">
-                <div class="check-item">
-                  <input type="checkbox"
-                  ${paid ? "checked" : ""}
-                  onchange="saveField('${item.ID}','Paid',this.checked?'TRUE':'FALSE',this)">
-                  <label>Paid</label>
-                </div>
-
-                <div class="check-item">
-                  <input type="checkbox"
-                  ${autopay ? "checked" : ""}
-                  onchange="saveField('${item.ID}','AutoPay',this.checked?'TRUE':'FALSE',this)">
-                  <label>AutoPay</label>
-                </div>
-              </div>
-
-              <div class="notes">
-                <input type="text" value="${item.Notes || ""}"
-                onchange="saveField('${item.ID}','Notes',this.value,this)">
-              </div>
-
-              <div class="save-msg">Saved</div>
-            `;
-          }
-
-          section.appendChild(card);
-        });
-
-        app.appendChild(section);
-      });
-    }
-
-    function autoAdvanceAutopayBills(items) {
-      const today = new Date();
-      today.setHours(0, 0, 0, 0);
-
-      items.forEach(item => {
-        const isBill = item.Category === "Bills";
-        const isAutoPay = String(item.AutoPay).toUpperCase() === "TRUE";
-        const dueDate = getDateValue(item.DueDate);
-
-        if (!isBill || !isAutoPay || !dueDate) return;
-
-        dueDate.setHours(0, 0, 0, 0);
-
-        if (dueDate < today) {
-          const nextDate = getNextMonthDate(dueDate);
-          item.DueDate = nextDate;
-          item.Paid = "FALSE";
-
-          fetch(SCRIPT_URL, {
-            method: "POST",
-            body: JSON.stringify({
-              ID: item.ID,
-              DueDate: nextDate,
-              Paid: "FALSE"
-            })
-          });
-        }
-      });
-    }
-
-    function getNextMonthDate(date) {
-      let newDate = new Date(date);
-      newDate.setMonth(newDate.getMonth() + 1);
-
-      while (newDate < new Date().setHours(0, 0, 0, 0)) {
-        newDate.setMonth(newDate.getMonth() + 1);
-      }
-
-      return newDate.toISOString().split("T")[0];
-    }
-
-    function saveField(id, field, value, element) {
-      const card = element.closest(".card");
-      const msg = card.querySelector(".save-msg");
-
-      fetch(SCRIPT_URL, {
-        method: "POST",
-        body: JSON.stringify({ ID: id, [field]: value })
-      })
-      .then(() => {
-        msg.style.display = "block";
-        setTimeout(() => msg.style.display = "none", 1000);
-        loadBills();
-      })
-      .catch(error => {
-        alert("Could not save.");
-        console.error(error);
-      });
-    }
-
-    function addNewAccount() {
-      const category = document.getElementById("newCategory").value;
-      const biller = document.getElementById("newBiller").value.trim();
-
-      if (!biller) {
-        alert("Please enter a name.");
-        return;
-      }
-
-      fetch(SCRIPT_URL, {
-        method: "POST",
-        body: JSON.stringify({
-          Action: "ADD",
-          ID: createID(biller),
-          Category: category,
-          Biller: biller,
-          Website: document.getElementById("newWebsite").value.trim(),
-          DueDate: category === "Bills" ? document.getElementById("newDueDate").value : "",
-          Amount: category === "Bills" ? document.getElementById("newAmount").value : "",
-          Paid: "FALSE",
-          AutoPay: category === "Bills" ? document.getElementById("newAutoPay").value : "",
-          Notes: document.getElementById("newNotes").value.trim()
-        })
-      })
-      .then(() => {
-        document.getElementById("addStatus").style.display = "block";
-
-        document.getElementById("newBiller").value = "";
-        document.getElementById("newWebsite").value = "";
-        document.getElementById("newDueDate").value = "";
-        document.getElementById("newAmount").value = "";
-        document.getElementById("newAutoPay").value = "FALSE";
-        document.getElementById("newNotes").value = "";
-
-        setTimeout(() => {
-          document.getElementById("addStatus").style.display = "none";
-        }, 1500);
-
-        loadBills();
-      })
-      .catch(error => {
-        alert("Could not add account.");
-        console.error(error);
-      });
-    }
-
-    function createID(name) {
-      return name
-        .toLowerCase()
-        .replace(/[^a-z0-9]+/g, "-")
-        .replace(/^-|-$/g, "") + "-" + Date.now();
-    }
-
-    function toggleNewFields() {
-      const show = document.getElementById("newCategory").value === "Bills";
-      document.querySelectorAll(".bill-only").forEach(el => {
-        el.style.display = show ? "flex" : "none";
-      });
-    }
-
-    function formatDate(value) {
-      if (!value) return "";
-      const date = new Date(value);
-      if (isNaN(date)) return value;
-      return date.toISOString().split("T")[0];
-    }
-
-    function getDateValue(value) {
-      if (!value) return null;
-      const date = new Date(value);
-      if (isNaN(date)) return null;
-      return date;
-    }
-
-    function getDueStatus(value, paid) {
-      if (!value || paid) return { type: "", message: "", className: "" };
-
-      const today = new Date();
-      today.setHours(0, 0, 0, 0);
-
-      const dueDate = new Date(value);
-      dueDate.setHours(0, 0, 0, 0);
-
-      if (isNaN(dueDate)) return { type: "", message: "", className: "" };
-
-      const diffDays = Math.round((dueDate - today) / (1000 * 60 * 60 * 24));
-
-      if (diffDays < 0) {
-        return {
-          type: "overdue",
-          message: `Overdue by ${Math.abs(diffDays)} day${Math.abs(diffDays) === 1 ? "" : "s"}`,
-          className: "overdue-text"
-        };
-      }
-
-      if (diffDays === 0) {
-        return {
-          type: "upcoming",
-          message: "Due today",
-          className: "upcoming-text"
-        };
-      }
-
-      if (diffDays <= 7) {
-        return {
-          type: "upcoming",
-          message: `Due in ${diffDays} day${diffDays === 1 ? "" : "s"}`,
-          className: "upcoming-text"
-        };
-      }
-
-      return { type: "", message: "", className: "" };
-    }
-
-    toggleNewFields();
-    loadBills();
-  </script>
+<div class="container">
+<h1>Polly's Bills</h1>
+<div class="subtitle">Bill links, due dates, and payment amounts</div>
+
+<div id="app"></div>
+
+<section>
+<h2>Add New Account</h2>
+
+<div class="add-card">
+<div class="add-grid">
+
+<div>
+<label>Type</label>
+<select id="newCategory" onchange="toggleNewFields()">
+<option value="Bills">Bill</option>
+<option value="Bank Accounts">Bank Account</option>
+</select>
+</div>
+
+<div>
+<label>Name</label>
+<input id="newBiller" placeholder="Example: Duke Energy">
+</div>
+
+<div>
+<label>Website</label>
+<input id="newWebsite" placeholder="https://example.com">
+</div>
+
+<div class="bill-only">
+<label>Due Date</label>
+<input id="newDueDate" type="date">
+</div>
+
+<div class="bill-only">
+<label>Amount</label>
+<div class="money-box">
+<span>$</span>
+<input id="newAmount" placeholder="Amount">
+</div>
+</div>
+
+<div class="bill-only">
+<label>AutoPay</label>
+<select id="newAutoPay">
+<option value="FALSE">No</option>
+<option value="TRUE">Yes</option>
+</select>
+</div>
+
+<div>
+<label>Notes</label>
+<input id="newNotes" placeholder="Notes">
+</div>
+
+</div>
+
+<button onclick="addNewAccount()">Add Account</button>
+</div>
+</section>
+
+</div>
+
+<script>
+const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyrQvUJoyFMkGR5WERF3W4U4TNaab8yXdiVbHPW7eD_BwkJSSLHMpGpDnfN2ERZB0NnZw/exec";
+
+function loadBills() {
+fetch(SCRIPT_URL).then(r=>r.json()).then(data=>{
+autoAdvance(data);
+render(data);
+});
+}
+
+function render(items) {
+const app=document.getElementById("app");
+app.innerHTML="";
+
+const categories=[...new Set(items.map(i=>i.Category))];
+
+categories.forEach(cat=>{
+const sec=document.createElement("section");
+sec.innerHTML=`<h2>${cat}</h2>`;
+
+let list=items.filter(i=>i.Category===cat);
+
+if(cat==="Bills"){
+list.sort((a,b)=>new Date(a.DueDate)-new Date(b.DueDate));
+}
+
+list.forEach(item=>{
+const card=document.createElement("div");
+card.className="card";
+
+if(cat==="Bank Accounts"){
+card.innerHTML=`
+<div class="bank-row">
+<div class="biller">${item.Biller}</div>
+<a class="pay-button" href="${item.Website}" target="_blank">Visit Website</a>
+</div>
+
+<div class="notes">
+<input placeholder="Notes" value="${item.Notes||""}"
+onchange="save('${item.ID}','Notes',this.value)">
+</div>
+`;
+}else{
+
+const paid=item.Paid==="TRUE";
+const autopay=item.AutoPay==="TRUE";
+const status=getStatus(item.DueDate,paid);
+
+if(status==="overdue") card.classList.add("overdue");
+if(status==="upcoming") card.classList.add("upcoming");
+if(paid) card.classList.add("paid-card");
+
+card.innerHTML=`
+<div class="row">
+<div class="biller">${item.Biller}</div>
+
+<input type="date" value="${format(item.DueDate)}"
+onchange="save('${item.ID}','DueDate',this.value)">
+
+<div class="money-box">
+<span>$</span>
+<input placeholder="Amount" value="${item.Amount||""}"
+onchange="save('${item.ID}','Amount',this.value)">
+</div>
+
+<a class="pay-button" href="${item.Website}" target="_blank">Visit Website</a>
+</div>
+
+<div class="check-row">
+<div class="check-item">
+<input type="checkbox" ${paid?"checked":""}
+onchange="save('${item.ID}','Paid',this.checked?'TRUE':'FALSE')">
+<label>Paid</label>
+</div>
+
+<div class="check-item">
+<input type="checkbox" ${autopay?"checked":""}
+onchange="save('${item.ID}','AutoPay',this.checked?'TRUE':'FALSE')">
+<label>AutoPay</label>
+</div>
+</div>
+
+<div class="notes">
+<input placeholder="Notes" value="${item.Notes||""}"
+onchange="save('${item.ID}','Notes',this.value)">
+</div>
+`;
+}
+
+sec.appendChild(card);
+});
+
+app.appendChild(sec);
+});
+}
+
+function save(id,field,value){
+fetch(SCRIPT_URL,{
+method:"POST",
+body:JSON.stringify({ID:id,[field]:value})
+}).then(()=>loadBills());
+}
+
+function addNewAccount(){
+fetch(SCRIPT_URL,{
+method:"POST",
+body:JSON.stringify({
+Action:"ADD",
+ID:Date.now(),
+Category:newCategory.value,
+Biller:newBiller.value,
+Website:newWebsite.value,
+DueDate:newCategory.value==="Bills"?newDueDate.value:"",
+Amount:newCategory.value==="Bills"?newAmount.value:"",
+Paid:"FALSE",
+AutoPay:newAutoPay.value,
+Notes:newNotes.value
+})
+}).then(()=>loadBills());
+}
+
+function autoAdvance(items){
+const today=new Date();
+
+items.forEach(i=>{
+if(i.AutoPay==="TRUE" && new Date(i.DueDate)<today){
+let d=new Date(i.DueDate);
+d.setMonth(d.getMonth()+1);
+save(i.ID,"DueDate",d.toISOString().split("T")[0]);
+save(i.ID,"Paid","FALSE");
+}
+});
+}
+
+function format(d){
+if(!d) return "";
+return new Date(d).toISOString().split("T")[0];
+}
+
+function getStatus(d,paid){
+if(!d||paid) return "";
+const today=new Date();
+const due=new Date(d);
+const diff=(due-today)/(1000*60*60*24);
+
+if(diff<0) return "overdue";
+if(diff<=7) return "upcoming";
+return "";
+}
+
+function toggleNewFields(){
+document.querySelectorAll(".bill-only")
+.forEach(el=>el.style.display=newCategory.value==="Bills"?"block":"none");
+}
+
+loadBills();
+</script>
+
 </body>
 </html>
