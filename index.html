@@ -1,65 +1,242 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>My Links</title>
+  <title>Polly Bills</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
   <style>
     body {
-      font-family: Arial;
-      max-width: 600px;
-      margin: auto;
+      font-family: Arial, sans-serif;
+      background: #f4f6f8;
+      margin: 0;
       padding: 20px;
+      color: #222;
     }
-    a {
-      display: block;
-      margin: 10px 0;
+
+    .container {
+      max-width: 900px;
+      margin: auto;
+    }
+
+    h1 {
+      text-align: center;
+      margin-bottom: 5px;
+    }
+
+    .subtitle {
+      text-align: center;
+      color: #666;
+      margin-bottom: 25px;
+    }
+
+    h2 {
+      margin-top: 30px;
+      border-bottom: 2px solid #ddd;
+      padding-bottom: 8px;
+    }
+
+    .card {
+      background: white;
+      border-radius: 12px;
+      padding: 15px;
+      margin: 12px 0;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+    }
+
+    .row {
+      display: grid;
+      grid-template-columns: 1.5fr 1fr 1fr auto;
+      gap: 10px;
+      align-items: center;
+    }
+
+    .biller {
       font-size: 18px;
+      font-weight: bold;
+    }
+
+    a.pay-button {
+      background: #1a73e8;
+      color: white;
+      text-decoration: none;
+      padding: 10px 14px;
+      border-radius: 8px;
+      text-align: center;
+      white-space: nowrap;
+    }
+
+    input[type="date"],
+    input[type="number"],
+    input[type="text"] {
+      padding: 8px;
+      border: 1px solid #ccc;
+      border-radius: 8px;
+      font-size: 15px;
+      width: 100%;
+      box-sizing: border-box;
+    }
+
+    .paid-area {
+      margin-top: 10px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .notes {
+      margin-top: 10px;
+    }
+
+    .status {
+      text-align: center;
+      color: #666;
+      margin: 15px 0;
+    }
+
+    .save-msg {
+      font-size: 13px;
+      color: #357a38;
+      margin-top: 8px;
+      display: none;
+    }
+
+    @media (max-width: 700px) {
+      .row {
+        grid-template-columns: 1fr;
+      }
+
+      a.pay-button {
+        display: block;
+      }
     }
   </style>
 </head>
+
 <body>
+  <div class="container">
+    <h1>Polly Bills</h1>
+    <div class="subtitle">Bill links, due dates, and payment amounts</div>
 
-  <h1>My Links</h1>
+    <div id="status" class="status">Loading bills...</div>
+    <div id="app"></div>
+  </div>
 
-  <h1>Bank Accounts:</h1>
-  <a href="https://www.bankofamerica.com" target="_blank">Bank Of America</a>
-  <a href="https://www.pnc.com/en/personal-banking.html" target="_blank">PNC Bank</a>
+  <script>
+    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwlCbzsJ8bBL4foJvJJEcTO2PpRZjENYMTZDU_WMf-h-2bwR9M6cwM7f0tWWWS0v4tukw/exec";
 
-  <h1>Bank Credit Cards:</h1>
+    const app = document.getElementById("app");
+    const statusBox = document.getElementById("status");
 
-  <a>cc 4963:</a>
-  <a>due 5-19 $150</a>
+    function loadBills() {
+      fetch(SCRIPT_URL)
+        .then(response => response.json())
+        .then(data => {
+          statusBox.textContent = "";
+          renderBills(data);
+        })
+        .catch(error => {
+          statusBox.textContent = "Could not load bills. Check Apps Script permissions.";
+          console.error(error);
+        });
+    }
 
-   <a>cc 7077:</a>
-  <a>due 5-20 $420</a>
-  
-  
-  
+    function renderBills(items) {
+      app.innerHTML = "";
 
-  <h1>Bills:</h1>
-  <a href="https://www.t-mobile.com/" target="_blank">T-Mobile</a>
-  <a>Due Date - 3rd - autopay - #52 after</a>
-  <a href="https://www.homedepot.com/auth/view/signin?redirect=/myaccount/thdcreditcard" target="_blank">Home Depot</a>
-   <a>Due Date - 12th</a>
-  <a href="https://clayelectric.smarthub.coop/ui/#/login.com" target="_blank">Clay Electric</a>
-   <a>Due Date - 29th</a>
-  <a href="https://www.geico.com/" target="_blank">Geico</a>
-   <a>Paid up til 18th - then transferred to KIN</a>
-  <a href="https://www.siriusxm.com/" target="_blank">SiriusXM</a>
-  
-  <a href="https://my.dish.com/login" target="_blank">Dish</a>
-  <a href="https://us.etrade.com/etx/pxy/login" target="_blank">E-Trade</a>
-  <a href="https://outlook.live.com/" target="_blank">Hotmail</a>
-  <a href="https://www.gmail.com" target="_blank">Gmail</a>
-  <a href="https://www.threenotchemc.com/" target="_blank">Three Notch EMC</a>
-  <a href="https://dcwaterservice.org/" target="_blank">D C Water Service</a>
-  <a href="https://martinenvironmentalsvcs.com/" target="_blank">Martin Environmental Services</a>
-  <a href="https://www.tesla.com" target="_blank">Tesla</a>
-  <a href="https://www.kin.com/" target="_blank">KIN</a>
-   <a>Due Date - Contact Vender for login/password</a>
-  <a href="https://www.mobilehomeinsurance.com/" target="_blank">Mobile Home Insurance</a>
-  <a href="https://www.amig.com" target="_blank">American Modern Insurance Group</a>
- 
-  
+      const categories = [...new Set(items.map(item => item.Category))];
 
+      categories.forEach(category => {
+        const section = document.createElement("section");
+        section.innerHTML = `<h2>${category}</h2>`;
+
+        items
+          .filter(item => item.Category === category)
+          .forEach(item => {
+            const card = document.createElement("div");
+            card.className = "card";
+
+            card.innerHTML = `
+              <div class="row">
+                <div class="biller">${item.Biller || ""}</div>
+
+                <input 
+                  type="date" 
+                  value="${formatDate(item.DueDate)}"
+                  onchange="saveField('${item.ID}', 'DueDate', this.value, this)"
+                >
+
+                <input 
+                  type="number" 
+                  step="0.01"
+                  placeholder="Amount"
+                  value="${item.Amount || ""}"
+                  onchange="saveField('${item.ID}', 'Amount', this.value, this)"
+                >
+
+                ${item.Website 
+                  ? `<a class="pay-button" href="${item.Website}" target="_blank">Open</a>` 
+                  : `<span></span>`
+                }
+              </div>
+
+              <div class="paid-area">
+                <input 
+                  type="checkbox" 
+                  ${String(item.Paid).toUpperCase() === "TRUE" ? "checked" : ""}
+                  onchange="saveField('${item.ID}', 'Paid', this.checked ? 'TRUE' : 'FALSE', this)"
+                >
+                <label>Paid</label>
+              </div>
+
+              <div class="notes">
+                <input 
+                  type="text" 
+                  placeholder="Notes"
+                  value="${item.Notes || ""}"
+                  onchange="saveField('${item.ID}', 'Notes', this.value, this)"
+                >
+              </div>
+
+              <div class="save-msg">Saved</div>
+            `;
+
+            section.appendChild(card);
+          });
+
+        app.appendChild(section);
+      });
+    }
+
+    function saveField(id, field, value, element) {
+      const card = element.closest(".card");
+      const msg = card.querySelector(".save-msg");
+
+      fetch(SCRIPT_URL, {
+        method: "POST",
+        body: JSON.stringify({
+          ID: id,
+          [field]: value
+        })
+      })
+      .then(response => response.text())
+      .then(() => {
+        msg.style.display = "block";
+        setTimeout(() => msg.style.display = "none", 1200);
+      })
+      .catch(error => {
+        alert("Could not save. Check connection or Apps Script settings.");
+        console.error(error);
+      });
+    }
+
+    function formatDate(value) {
+      if (!value) return "";
+      const date = new Date(value);
+      if (isNaN(date)) return value;
+      return date.toISOString().split("T")[0];
+    }
+
+    loadBills();
+  </script>
 </body>
 </html>
