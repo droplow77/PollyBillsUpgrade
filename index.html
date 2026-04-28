@@ -43,11 +43,18 @@
       margin-bottom: 20px;
     }
 
-    .summary-card {
+    .summary-card,
+    .upcoming-list,
+    .card,
+    .add-card {
       background: white;
       border-radius: 14px;
-      padding: 16px;
+      padding: 15px;
       box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+    }
+
+    .summary-card {
+      padding: 16px;
     }
 
     .summary-title {
@@ -62,11 +69,7 @@
     }
 
     .upcoming-list {
-      background: white;
-      border-radius: 14px;
-      padding: 15px;
       margin-bottom: 20px;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.08);
     }
 
     .upcoming-item {
@@ -79,12 +82,9 @@
       border-bottom: none;
     }
 
-    .card, .add-card {
-      background: white;
-      border-radius: 12px;
-      padding: 15px;
+    .card,
+    .add-card {
       margin: 12px 0;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.08);
       border-left: 6px solid transparent;
     }
 
@@ -141,7 +141,8 @@
       color: #8a6500;
     }
 
-    a.pay-button, button {
+    a.pay-button,
+    button {
       background: #1a73e8;
       color: white;
       text-decoration: none;
@@ -159,7 +160,26 @@
       width: 100%;
     }
 
-    input, select {
+    .remove-button {
+      background: #d93025;
+      margin-top: 0;
+      width: auto;
+    }
+
+    .confirm-button {
+      background: #8b0000;
+      margin-top: 0;
+      width: auto;
+    }
+
+    .cancel-button {
+      background: #666;
+      margin-top: 0;
+      width: auto;
+    }
+
+    input,
+    select {
       padding: 10px;
       border: 1px solid #ccc;
       border-radius: 8px;
@@ -210,6 +230,28 @@
       width: auto;
     }
 
+    .remove-area {
+      margin-top: 12px;
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      align-items: center;
+    }
+
+    .confirm-area {
+      display: none;
+      gap: 10px;
+      flex-wrap: wrap;
+      align-items: center;
+    }
+
+    .confirm-text {
+      font-size: 14px;
+      font-weight: bold;
+      color: #8b0000;
+      width: 100%;
+    }
+
     .notes {
       margin-top: 10px;
     }
@@ -243,7 +285,10 @@
         grid-template-columns: 1fr;
       }
 
-      .card, .add-card, .summary-card, .upcoming-list {
+      .card,
+      .add-card,
+      .summary-card,
+      .upcoming-list {
         padding: 14px;
       }
 
@@ -260,6 +305,12 @@
 
       .summary-value {
         font-size: 24px;
+      }
+
+      .remove-button,
+      .confirm-button,
+      .cancel-button {
+        width: 100%;
       }
     }
   </style>
@@ -442,6 +493,8 @@ function renderBills(items) {
             onchange="saveField('${item.ID}','Notes',this.value,this)">
           </div>
 
+          ${removeControls(item.ID, item.Biller)}
+
           <div class="save-msg">Saved</div>
         `;
       } else {
@@ -490,6 +543,8 @@ function renderBills(items) {
             onchange="saveField('${item.ID}','Notes',this.value,this)">
           </div>
 
+          ${removeControls(item.ID, item.Biller)}
+
           <div class="save-msg">Saved</div>
         `;
       }
@@ -498,6 +553,47 @@ function renderBills(items) {
     });
 
     app.appendChild(section);
+  });
+}
+
+function removeControls(id, name) {
+  return `
+    <div class="remove-area">
+      <button class="remove-button" onclick="showConfirmRemove(this)">Remove</button>
+
+      <div class="confirm-area">
+        <div class="confirm-text">Remove ${name || "this item"}?</div>
+        <button class="confirm-button" onclick="deleteItem('${id}')">Confirm Remove</button>
+        <button class="cancel-button" onclick="hideConfirmRemove(this)">Cancel</button>
+      </div>
+    </div>
+  `;
+}
+
+function showConfirmRemove(button) {
+  const area = button.closest(".remove-area");
+  button.style.display = "none";
+  area.querySelector(".confirm-area").style.display = "flex";
+}
+
+function hideConfirmRemove(button) {
+  const area = button.closest(".remove-area");
+  area.querySelector(".remove-button").style.display = "inline-block";
+  area.querySelector(".confirm-area").style.display = "none";
+}
+
+function deleteItem(id) {
+  fetch(SCRIPT_URL, {
+    method: "POST",
+    body: JSON.stringify({
+      Action: "DELETE",
+      ID: id
+    })
+  })
+  .then(() => loadBills())
+  .catch(error => {
+    alert("Could not remove item.");
+    console.error(error);
   });
 }
 
