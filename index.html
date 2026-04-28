@@ -126,11 +126,18 @@
       padding-left: 24px;
     }
 
+    /* ✅ FIXED PAID ALIGNMENT */
     .paid-area {
       margin-top: 10px;
       display: flex;
+      justify-content: flex-start;
       align-items: center;
       gap: 8px;
+      width: 100%;
+    }
+
+    .paid-area input {
+      width: auto;
     }
 
     .notes {
@@ -194,12 +201,12 @@
 
           <div class="field">
             <label>Name</label>
-            <input id="newBiller" type="text" placeholder="Example: Duke Energy">
+            <input id="newBiller" type="text">
           </div>
 
           <div class="field">
             <label>Website</label>
-            <input id="newWebsite" type="text" placeholder="https://example.com">
+            <input id="newWebsite" type="text">
           </div>
 
           <div class="field bill-only">
@@ -211,13 +218,13 @@
             <label>Amount</label>
             <div class="money-box">
               <span>$</span>
-              <input id="newAmount" type="number" step="0.01" placeholder="Amount">
+              <input id="newAmount" type="number" step="0.01">
             </div>
           </div>
 
           <div class="field">
             <label>Notes</label>
-            <input id="newNotes" type="text" placeholder="Optional notes">
+            <input id="newNotes" type="text">
           </div>
         </div>
 
@@ -241,7 +248,7 @@
           renderBills(data);
         })
         .catch(error => {
-          statusBox.textContent = "Could not load bills. Check Apps Script permissions.";
+          statusBox.textContent = "Could not load bills.";
           console.error(error);
         });
     }
@@ -255,185 +262,100 @@
         const section = document.createElement("section");
         section.innerHTML = `<h2>${category}</h2>`;
 
-        items
-          .filter(item => item.Category === category)
-          .forEach(item => {
-            const card = document.createElement("div");
-            card.className = "card";
+        items.filter(i => i.Category === category).forEach(item => {
+          const card = document.createElement("div");
+          card.className = "card";
 
-            if (category === "Bank Accounts") {
-              card.innerHTML = `
-                <div class="bank-row">
-                  <div class="biller">${item.Biller || ""}</div>
+          if (category === "Bank Accounts") {
+            card.innerHTML = `
+              <div class="bank-row">
+                <div class="biller">${item.Biller}</div>
+                ${item.Website ? `<a class="pay-button" href="${item.Website}" target="_blank">Visit Website</a>` : ""}
+              </div>
 
-                  ${item.Website 
-                    ? `<a class="pay-button" href="${item.Website}" target="_blank">Visit Website</a>` 
-                    : `<span></span>`
-                  }
+              <div class="notes">
+                <input type="text" value="${item.Notes || ""}"
+                onchange="saveField('${item.ID}','Notes',this.value,this)">
+              </div>
+
+              <div class="save-msg">Saved</div>
+            `;
+          } else {
+            card.innerHTML = `
+              <div class="row">
+                <div class="biller">${item.Biller}</div>
+
+                <input type="date" value="${formatDate(item.DueDate)}"
+                onchange="saveField('${item.ID}','DueDate',this.value,this)">
+
+                <div class="money-box">
+                  <span>$</span>
+                  <input type="number" value="${item.Amount || ""}"
+                  onchange="saveField('${item.ID}','Amount',this.value,this)">
                 </div>
 
-                <div class="notes">
-                  <input 
-                    type="text" 
-                    placeholder="Notes"
-                    value="${item.Notes || ""}"
-                    onchange="saveField('${item.ID}', 'Notes', this.value, this)"
-                  >
-                </div>
+                ${item.Website ? `<a class="pay-button" href="${item.Website}" target="_blank">Visit Website</a>` : ""}
+              </div>
 
-                <div class="save-msg">Saved</div>
-              `;
-            } else {
-              card.innerHTML = `
-                <div class="row">
-                  <div class="biller">${item.Biller || ""}</div>
+              <div class="paid-area">
+                <input type="checkbox"
+                ${item.Paid === "TRUE" ? "checked" : ""}
+                onchange="saveField('${item.ID}','Paid',this.checked?'TRUE':'FALSE',this)">
+                <label>Paid</label>
+              </div>
 
-                  <input 
-                    type="date" 
-                    value="${formatDate(item.DueDate)}"
-                    onchange="saveField('${item.ID}', 'DueDate', this.value, this)"
-                  >
+              <div class="notes">
+                <input type="text" value="${item.Notes || ""}"
+                onchange="saveField('${item.ID}','Notes',this.value,this)">
+              </div>
 
-                  <div class="money-box">
-                    <span>$</span>
-                    <input 
-                      type="number" 
-                      step="0.01"
-                      placeholder="Amount"
-                      value="${item.Amount || ""}"
-                      onchange="saveField('${item.ID}', 'Amount', this.value, this)"
-                    >
-                  </div>
+              <div class="save-msg">Saved</div>
+            `;
+          }
 
-                  ${item.Website 
-                    ? `<a class="pay-button" href="${item.Website}" target="_blank">Visit Website</a>` 
-                    : `<span></span>`
-                  }
-                </div>
-
-                <div class="paid-area">
-                  <input 
-                    type="checkbox" 
-                    ${String(item.Paid).toUpperCase() === "TRUE" ? "checked" : ""}
-                    onchange="saveField('${item.ID}', 'Paid', this.checked ? 'TRUE' : 'FALSE', this)"
-                  >
-                  <label>Paid</label>
-                </div>
-
-                <div class="notes">
-                  <input 
-                    type="text" 
-                    placeholder="Notes"
-                    value="${item.Notes || ""}"
-                    onchange="saveField('${item.ID}', 'Notes', this.value, this)"
-                  >
-                </div>
-
-                <div class="save-msg">Saved</div>
-              `;
-            }
-
-            section.appendChild(card);
-          });
+          section.appendChild(card);
+        });
 
         app.appendChild(section);
       });
     }
 
     function saveField(id, field, value, element) {
-      const card = element.closest(".card");
-      const msg = card.querySelector(".save-msg");
-
       fetch(SCRIPT_URL, {
         method: "POST",
-        body: JSON.stringify({
-          ID: id,
-          [field]: value
-        })
-      })
-      .then(response => response.text())
-      .then(() => {
-        msg.style.display = "block";
-        setTimeout(() => msg.style.display = "none", 1200);
-      })
-      .catch(error => {
-        alert("Could not save. Check connection or Apps Script settings.");
-        console.error(error);
+        body: JSON.stringify({ ID: id, [field]: value })
       });
     }
 
     function addNewAccount() {
       const category = document.getElementById("newCategory").value;
-      const biller = document.getElementById("newBiller").value.trim();
-      const website = document.getElementById("newWebsite").value.trim();
-      const dueDate = document.getElementById("newDueDate").value;
-      const amount = document.getElementById("newAmount").value;
-      const notes = document.getElementById("newNotes").value.trim();
-
-      if (!biller) {
-        alert("Please enter a name.");
-        return;
-      }
-
-      const id = createID(biller);
 
       fetch(SCRIPT_URL, {
         method: "POST",
         body: JSON.stringify({
           Action: "ADD",
-          ID: id,
+          ID: Date.now(),
           Category: category,
-          Biller: biller,
-          Website: website,
-          DueDate: category === "Bills" ? dueDate : "",
-          Amount: category === "Bills" ? amount : "",
+          Biller: document.getElementById("newBiller").value,
+          Website: document.getElementById("newWebsite").value,
+          DueDate: category === "Bills" ? document.getElementById("newDueDate").value : "",
+          Amount: category === "Bills" ? document.getElementById("newAmount").value : "",
           Paid: "FALSE",
-          Notes: notes
+          Notes: document.getElementById("newNotes").value
         })
-      })
-      .then(response => response.text())
-      .then(() => {
-        document.getElementById("addStatus").style.display = "block";
-
-        document.getElementById("newBiller").value = "";
-        document.getElementById("newWebsite").value = "";
-        document.getElementById("newDueDate").value = "";
-        document.getElementById("newAmount").value = "";
-        document.getElementById("newNotes").value = "";
-
-        setTimeout(() => {
-          document.getElementById("addStatus").style.display = "none";
-        }, 1500);
-
-        loadBills();
-      })
-      .catch(error => {
-        alert("Could not add account.");
-        console.error(error);
-      });
-    }
-
-    function createID(name) {
-      return name
-        .toLowerCase()
-        .replace(/[^a-z0-9]+/g, "-")
-        .replace(/^-|-$/g, "") + "-" + Date.now();
+      }).then(() => loadBills());
     }
 
     function toggleNewFields() {
-      const category = document.getElementById("newCategory").value;
-      const billOnlyFields = document.querySelectorAll(".bill-only");
-
-      billOnlyFields.forEach(field => {
-        field.style.display = category === "Bills" ? "flex" : "none";
+      const show = document.getElementById("newCategory").value === "Bills";
+      document.querySelectorAll(".bill-only").forEach(el => {
+        el.style.display = show ? "flex" : "none";
       });
     }
 
-    function formatDate(value) {
-      if (!value) return "";
-      const date = new Date(value);
-      if (isNaN(date)) return value;
-      return date.toISOString().split("T")[0];
+    function formatDate(v) {
+      if (!v) return "";
+      return new Date(v).toISOString().split("T")[0];
     }
 
     toggleNewFields();
