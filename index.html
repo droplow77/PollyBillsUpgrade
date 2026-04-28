@@ -5,11 +5,79 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
   <style>
-    body { font-family: Arial, sans-serif; background: #f4f6f8; margin: 0; padding: 20px; color: #222; }
-    .container { max-width: 900px; margin: auto; }
-    h1 { text-align: center; margin-bottom: 5px; }
-    .subtitle { text-align: center; color: #666; margin-bottom: 25px; }
-    h2 { margin-top: 30px; border-bottom: 2px solid #ddd; padding-bottom: 8px; }
+    body {
+      font-family: Arial, sans-serif;
+      background: #f4f6f8;
+      margin: 0;
+      padding: 16px;
+      color: #222;
+    }
+
+    .container {
+      max-width: 900px;
+      margin: auto;
+    }
+
+    h1 {
+      text-align: center;
+      margin-bottom: 5px;
+      font-size: 32px;
+    }
+
+    .subtitle {
+      text-align: center;
+      color: #666;
+      margin-bottom: 20px;
+    }
+
+    h2 {
+      margin-top: 30px;
+      border-bottom: 2px solid #ddd;
+      padding-bottom: 8px;
+    }
+
+    .summary-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      margin-bottom: 20px;
+    }
+
+    .summary-card {
+      background: white;
+      border-radius: 14px;
+      padding: 16px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+    }
+
+    .summary-title {
+      color: #666;
+      font-size: 14px;
+      margin-bottom: 6px;
+    }
+
+    .summary-value {
+      font-size: 28px;
+      font-weight: bold;
+    }
+
+    .upcoming-list {
+      background: white;
+      border-radius: 14px;
+      padding: 15px;
+      margin-bottom: 20px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+    }
+
+    .upcoming-item {
+      padding: 8px 0;
+      border-bottom: 1px solid #eee;
+      font-size: 15px;
+    }
+
+    .upcoming-item:last-child {
+      border-bottom: none;
+    }
 
     .card, .add-card {
       background: white;
@@ -20,9 +88,19 @@
       border-left: 6px solid transparent;
     }
 
-    .overdue { background: #ffecec; border-left-color: #d93025; }
-    .upcoming { background: #fff8db; border-left-color: #fbbc04; }
-    .paid-card { opacity: 0.75; }
+    .overdue {
+      background: #ffecec;
+      border-left-color: #d93025;
+    }
+
+    .upcoming {
+      background: #fff8db;
+      border-left-color: #fbbc04;
+    }
+
+    .paid-card {
+      opacity: 0.75;
+    }
 
     .row {
       display: grid;
@@ -44,38 +122,64 @@
       gap: 12px;
     }
 
-    .biller { font-size: 18px; font-weight: bold; }
+    .biller {
+      font-size: 18px;
+      font-weight: bold;
+    }
 
-    .due-label { font-size: 13px; font-weight: bold; margin-top: 8px; }
-    .overdue-text { color: #d93025; }
-    .upcoming-text { color: #8a6500; }
+    .due-label {
+      font-size: 13px;
+      font-weight: bold;
+      margin-top: 8px;
+    }
+
+    .overdue-text {
+      color: #d93025;
+    }
+
+    .upcoming-text {
+      color: #8a6500;
+    }
 
     a.pay-button, button {
       background: #1a73e8;
       color: white;
       text-decoration: none;
-      padding: 10px 14px;
+      padding: 11px 14px;
       border-radius: 8px;
       text-align: center;
       border: none;
       cursor: pointer;
       font-size: 15px;
+      display: inline-block;
     }
 
-    button { margin-top: 15px; width: 100%; }
+    button {
+      margin-top: 15px;
+      width: 100%;
+    }
 
     input, select {
-      padding: 8px;
+      padding: 10px;
       border: 1px solid #ccc;
       border-radius: 8px;
-      font-size: 15px;
+      font-size: 16px;
       width: 100%;
       box-sizing: border-box;
     }
 
-    label { font-size: 14px; font-weight: bold; color: #444; }
+    label {
+      font-size: 14px;
+      font-weight: bold;
+      color: #444;
+      display: block;
+      margin-bottom: 5px;
+    }
 
-    .money-box { position: relative; }
+    .money-box {
+      position: relative;
+    }
+
     .money-box span {
       position: absolute;
       left: 10px;
@@ -83,13 +187,17 @@
       transform: translateY(-50%);
       font-weight: bold;
     }
-    .money-box input { padding-left: 24px; }
+
+    .money-box input {
+      padding-left: 24px;
+    }
 
     .check-row {
       margin-top: 10px;
       display: flex;
       gap: 20px;
       flex-wrap: wrap;
+      align-items: center;
     }
 
     .check-item {
@@ -98,236 +206,488 @@
       gap: 8px;
     }
 
-    .check-item input { width: auto; }
+    .check-item input {
+      width: auto;
+    }
 
-    .notes { margin-top: 10px; }
+    .notes {
+      margin-top: 10px;
+    }
+
+    .save-msg {
+      font-size: 13px;
+      color: #357a38;
+      margin-top: 8px;
+      display: none;
+    }
+
+    .status {
+      text-align: center;
+      color: #666;
+      margin: 15px 0;
+    }
 
     @media (max-width: 700px) {
-      .row, .bank-row, .add-grid { grid-template-columns: 1fr; }
+      body {
+        padding: 10px;
+      }
+
+      h1 {
+        font-size: 28px;
+      }
+
+      .summary-grid,
+      .row,
+      .bank-row,
+      .add-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .card, .add-card, .summary-card, .upcoming-list {
+        padding: 14px;
+      }
+
+      a.pay-button {
+        display: block;
+        width: 100%;
+        box-sizing: border-box;
+        margin-top: 4px;
+      }
+
+      .check-row {
+        gap: 16px;
+      }
+
+      .summary-value {
+        font-size: 24px;
+      }
     }
   </style>
 </head>
 
 <body>
 <div class="container">
-<h1>Polly's Bills</h1>
-<div class="subtitle">Bill links, due dates, and payment amounts</div>
+  <h1>Polly's Bills</h1>
+  <div class="subtitle">Bill links, due dates, and payment amounts</div>
 
-<div id="app"></div>
+  <div id="status" class="status">Loading bills...</div>
 
-<section>
-<h2>Add New Account</h2>
+  <div id="summary"></div>
+  <div id="app"></div>
 
-<div class="add-card">
-<div class="add-grid">
+  <section>
+    <h2>Add New Account</h2>
 
-<div>
-<label>Type</label>
-<select id="newCategory" onchange="toggleNewFields()">
-<option value="Bills">Bill</option>
-<option value="Bank Accounts">Bank Account</option>
-</select>
-</div>
+    <div class="add-card">
+      <div class="add-grid">
 
-<div>
-<label>Name</label>
-<input id="newBiller" placeholder="Example: Duke Energy">
-</div>
+        <div>
+          <label>Type</label>
+          <select id="newCategory" onchange="toggleNewFields()">
+            <option value="Bills">Bill</option>
+            <option value="Bank Accounts">Bank Account</option>
+          </select>
+        </div>
 
-<div>
-<label>Website</label>
-<input id="newWebsite" placeholder="https://example.com">
-</div>
+        <div>
+          <label>Name</label>
+          <input id="newBiller" placeholder="Example: Duke Energy">
+        </div>
 
-<div class="bill-only">
-<label>Due Date</label>
-<input id="newDueDate" type="date">
-</div>
+        <div>
+          <label>Website</label>
+          <input id="newWebsite" placeholder="https://example.com">
+        </div>
 
-<div class="bill-only">
-<label>Amount</label>
-<div class="money-box">
-<span>$</span>
-<input id="newAmount" placeholder="Amount">
-</div>
-</div>
+        <div class="bill-only">
+          <label>Due Date</label>
+          <input id="newDueDate" type="date">
+        </div>
 
-<div class="bill-only">
-<label>AutoPay</label>
-<select id="newAutoPay">
-<option value="FALSE">No</option>
-<option value="TRUE">Yes</option>
-</select>
-</div>
+        <div class="bill-only">
+          <label>Amount</label>
+          <div class="money-box">
+            <span>$</span>
+            <input id="newAmount" type="number" step="0.01" placeholder="Amount">
+          </div>
+        </div>
 
-<div>
-<label>Notes</label>
-<input id="newNotes" placeholder="Notes">
-</div>
+        <div class="bill-only">
+          <label>AutoPay</label>
+          <select id="newAutoPay">
+            <option value="FALSE">No</option>
+            <option value="TRUE">Yes</option>
+          </select>
+        </div>
 
-</div>
+        <div>
+          <label>Notes</label>
+          <input id="newNotes" placeholder="Optional notes">
+        </div>
 
-<button onclick="addNewAccount()">Add Account</button>
-</div>
-</section>
+      </div>
 
+      <button onclick="addNewAccount()">Add Account</button>
+    </div>
+  </section>
 </div>
 
 <script>
 const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyrQvUJoyFMkGR5WERF3W4U4TNaab8yXdiVbHPW7eD_BwkJSSLHMpGpDnfN2ERZB0NnZw/exec";
 
 function loadBills() {
-fetch(SCRIPT_URL).then(r=>r.json()).then(data=>{
-autoAdvance(data);
-render(data);
-});
+  fetch(SCRIPT_URL)
+    .then(response => response.json())
+    .then(data => {
+      autoAdvanceAutopayBills(data);
+      document.getElementById("status").textContent = "";
+      renderSummary(data);
+      renderBills(data);
+    })
+    .catch(error => {
+      document.getElementById("status").textContent = "Could not load bills.";
+      console.error(error);
+    });
 }
 
-function render(items) {
-const app=document.getElementById("app");
-app.innerHTML="";
+function renderSummary(items) {
+  const bills = items.filter(item => item.Category === "Bills");
+  const unpaidBills = bills.filter(item => String(item.Paid).toUpperCase() !== "TRUE");
 
-const categories=[...new Set(items.map(i=>i.Category))];
+  const totalMonthly = bills.reduce((sum, item) => {
+    const amount = parseFloat(item.Amount);
+    return sum + (isNaN(amount) ? 0 : amount);
+  }, 0);
 
-categories.forEach(cat=>{
-const sec=document.createElement("section");
-sec.innerHTML=`<h2>${cat}</h2>`;
+  const upcomingBills = unpaidBills
+    .filter(item => getDateValue(item.DueDate))
+    .sort((a, b) => getDateValue(a.DueDate) - getDateValue(b.DueDate))
+    .slice(0, 5);
 
-let list=items.filter(i=>i.Category===cat);
+  let upcomingHtml = "";
 
-if(cat==="Bills"){
-list.sort((a,b)=>new Date(a.DueDate)-new Date(b.DueDate));
+  if (upcomingBills.length === 0) {
+    upcomingHtml = `<div class="upcoming-item">No upcoming bills found.</div>`;
+  } else {
+    upcomingBills.forEach(item => {
+      const dueStatus = getDueStatus(item.DueDate, false);
+      const amount = item.Amount ? ` - $${item.Amount}` : "";
+      upcomingHtml += `
+        <div class="upcoming-item">
+          <strong>${item.Biller || ""}</strong>${amount}<br>
+          ${formatFriendlyDate(item.DueDate)} ${dueStatus.message ? `(${dueStatus.message})` : ""}
+        </div>
+      `;
+    });
+  }
+
+  document.getElementById("summary").innerHTML = `
+    <div class="summary-grid">
+      <div class="summary-card">
+        <div class="summary-title">Total Monthly Spend</div>
+        <div class="summary-value">$${totalMonthly.toFixed(2)}</div>
+      </div>
+
+      <div class="summary-card">
+        <div class="summary-title">Unpaid Bills</div>
+        <div class="summary-value">${unpaidBills.length}</div>
+      </div>
+    </div>
+
+    <div class="upcoming-list">
+      <h2 style="margin-top: 0;">Upcoming Bills</h2>
+      ${upcomingHtml}
+    </div>
+  `;
 }
 
-list.forEach(item=>{
-const card=document.createElement("div");
-card.className="card";
+function renderBills(items) {
+  const app = document.getElementById("app");
+  app.innerHTML = "";
 
-if(cat==="Bank Accounts"){
-card.innerHTML=`
-<div class="bank-row">
-<div class="biller">${item.Biller}</div>
-<a class="pay-button" href="${item.Website}" target="_blank">Visit Website</a>
-</div>
+  const categories = [...new Set(items.map(item => item.Category))];
 
-<div class="notes">
-<input placeholder="Notes" value="${item.Notes||""}"
-onchange="save('${item.ID}','Notes',this.value)">
-</div>
-`;
-}else{
+  categories.forEach(category => {
+    const section = document.createElement("section");
+    section.innerHTML = `<h2>${category}</h2>`;
 
-const paid=item.Paid==="TRUE";
-const autopay=item.AutoPay==="TRUE";
-const status=getStatus(item.DueDate,paid);
+    let list = items.filter(item => item.Category === category);
 
-if(status==="overdue") card.classList.add("overdue");
-if(status==="upcoming") card.classList.add("upcoming");
-if(paid) card.classList.add("paid-card");
+    if (category === "Bills") {
+      list.sort((a, b) => {
+        const dateA = getDateValue(a.DueDate);
+        const dateB = getDateValue(b.DueDate);
 
-card.innerHTML=`
-<div class="row">
-<div class="biller">${item.Biller}</div>
+        if (!dateA && !dateB) return 0;
+        if (!dateA) return 1;
+        if (!dateB) return -1;
 
-<input type="date" value="${format(item.DueDate)}"
-onchange="save('${item.ID}','DueDate',this.value)">
+        return dateA - dateB;
+      });
+    }
 
-<div class="money-box">
-<span>$</span>
-<input placeholder="Amount" value="${item.Amount||""}"
-onchange="save('${item.ID}','Amount',this.value)">
-</div>
+    list.forEach(item => {
+      const card = document.createElement("div");
+      card.className = "card";
 
-<a class="pay-button" href="${item.Website}" target="_blank">Visit Website</a>
-</div>
+      if (category === "Bank Accounts") {
+        card.innerHTML = `
+          <div class="bank-row">
+            <div class="biller">${item.Biller || ""}</div>
+            ${item.Website ? `<a class="pay-button" href="${item.Website}" target="_blank">Visit Website</a>` : ""}
+          </div>
 
-<div class="check-row">
-<div class="check-item">
-<input type="checkbox" ${paid?"checked":""}
-onchange="save('${item.ID}','Paid',this.checked?'TRUE':'FALSE')">
-<label>Paid</label>
-</div>
+          <div class="notes">
+            <input placeholder="Notes" value="${item.Notes || ""}"
+            onchange="saveField('${item.ID}','Notes',this.value,this)">
+          </div>
 
-<div class="check-item">
-<input type="checkbox" ${autopay?"checked":""}
-onchange="save('${item.ID}','AutoPay',this.checked?'TRUE':'FALSE')">
-<label>AutoPay</label>
-</div>
-</div>
+          <div class="save-msg">Saved</div>
+        `;
+      } else {
+        const paid = String(item.Paid).toUpperCase() === "TRUE";
+        const autopay = String(item.AutoPay).toUpperCase() === "TRUE";
+        const dueStatus = getDueStatus(item.DueDate, paid);
 
-<div class="notes">
-<input placeholder="Notes" value="${item.Notes||""}"
-onchange="save('${item.ID}','Notes',this.value)">
-</div>
-`;
+        if (dueStatus.type === "overdue") card.classList.add("overdue");
+        if (dueStatus.type === "upcoming") card.classList.add("upcoming");
+        if (paid) card.classList.add("paid-card");
+
+        card.innerHTML = `
+          <div class="row">
+            <div class="biller">${item.Biller || ""}</div>
+
+            <input type="date" value="${formatDate(item.DueDate)}"
+            onchange="saveField('${item.ID}','DueDate',this.value,this)">
+
+            <div class="money-box">
+              <span>$</span>
+              <input type="number" step="0.01" placeholder="Amount" value="${item.Amount || ""}"
+              onchange="saveField('${item.ID}','Amount',this.value,this)">
+            </div>
+
+            ${item.Website ? `<a class="pay-button" href="${item.Website}" target="_blank">Visit Website</a>` : ""}
+          </div>
+
+          ${dueStatus.message ? `<div class="due-label ${dueStatus.className}">${dueStatus.message}</div>` : ""}
+
+          <div class="check-row">
+            <div class="check-item">
+              <input type="checkbox" ${paid ? "checked" : ""}
+              onchange="saveField('${item.ID}','Paid',this.checked?'TRUE':'FALSE',this)">
+              <label>Paid</label>
+            </div>
+
+            <div class="check-item">
+              <input type="checkbox" ${autopay ? "checked" : ""}
+              onchange="saveField('${item.ID}','AutoPay',this.checked?'TRUE':'FALSE',this)">
+              <label>AutoPay</label>
+            </div>
+          </div>
+
+          <div class="notes">
+            <input placeholder="Notes" value="${item.Notes || ""}"
+            onchange="saveField('${item.ID}','Notes',this.value,this)">
+          </div>
+
+          <div class="save-msg">Saved</div>
+        `;
+      }
+
+      section.appendChild(card);
+    });
+
+    app.appendChild(section);
+  });
 }
 
-sec.appendChild(card);
-});
+function saveField(id, field, value, element) {
+  const card = element.closest(".card");
+  const msg = card.querySelector(".save-msg");
 
-app.appendChild(sec);
-});
+  fetch(SCRIPT_URL, {
+    method: "POST",
+    body: JSON.stringify({ ID: id, [field]: value })
+  })
+  .then(() => {
+    if (msg) {
+      msg.style.display = "block";
+      setTimeout(() => msg.style.display = "none", 1000);
+    }
+    loadBills();
+  })
+  .catch(error => {
+    alert("Could not save.");
+    console.error(error);
+  });
 }
 
-function save(id,field,value){
-fetch(SCRIPT_URL,{
-method:"POST",
-body:JSON.stringify({ID:id,[field]:value})
-}).then(()=>loadBills());
+function addNewAccount() {
+  const category = document.getElementById("newCategory").value;
+  const biller = document.getElementById("newBiller").value.trim();
+
+  if (!biller) {
+    alert("Please enter a name.");
+    return;
+  }
+
+  fetch(SCRIPT_URL, {
+    method: "POST",
+    body: JSON.stringify({
+      Action: "ADD",
+      ID: createID(biller),
+      Category: category,
+      Biller: biller,
+      Website: document.getElementById("newWebsite").value.trim(),
+      DueDate: category === "Bills" ? document.getElementById("newDueDate").value : "",
+      Amount: category === "Bills" ? document.getElementById("newAmount").value : "",
+      Paid: "FALSE",
+      AutoPay: category === "Bills" ? document.getElementById("newAutoPay").value : "",
+      Notes: document.getElementById("newNotes").value.trim()
+    })
+  })
+  .then(() => {
+    document.getElementById("newBiller").value = "";
+    document.getElementById("newWebsite").value = "";
+    document.getElementById("newDueDate").value = "";
+    document.getElementById("newAmount").value = "";
+    document.getElementById("newAutoPay").value = "FALSE";
+    document.getElementById("newNotes").value = "";
+    loadBills();
+  })
+  .catch(error => {
+    alert("Could not add account.");
+    console.error(error);
+  });
 }
 
-function addNewAccount(){
-fetch(SCRIPT_URL,{
-method:"POST",
-body:JSON.stringify({
-Action:"ADD",
-ID:Date.now(),
-Category:newCategory.value,
-Biller:newBiller.value,
-Website:newWebsite.value,
-DueDate:newCategory.value==="Bills"?newDueDate.value:"",
-Amount:newCategory.value==="Bills"?newAmount.value:"",
-Paid:"FALSE",
-AutoPay:newAutoPay.value,
-Notes:newNotes.value
-})
-}).then(()=>loadBills());
+function autoAdvanceAutopayBills(items) {
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+
+  items.forEach(item => {
+    const isBill = item.Category === "Bills";
+    const isAutoPay = String(item.AutoPay).toUpperCase() === "TRUE";
+    const dueDate = getDateValue(item.DueDate);
+
+    if (!isBill || !isAutoPay || !dueDate) return;
+
+    dueDate.setHours(0, 0, 0, 0);
+
+    if (dueDate < today) {
+      const nextDate = getNextMonthDate(dueDate);
+
+      item.DueDate = nextDate;
+      item.Paid = "FALSE";
+
+      fetch(SCRIPT_URL, {
+        method: "POST",
+        body: JSON.stringify({
+          ID: item.ID,
+          DueDate: nextDate,
+          Paid: "FALSE"
+        })
+      });
+    }
+  });
 }
 
-function autoAdvance(items){
-const today=new Date();
+function getNextMonthDate(date) {
+  let newDate = new Date(date);
+  const originalDay = newDate.getDate();
 
-items.forEach(i=>{
-if(i.AutoPay==="TRUE" && new Date(i.DueDate)<today){
-let d=new Date(i.DueDate);
-d.setMonth(d.getMonth()+1);
-save(i.ID,"DueDate",d.toISOString().split("T")[0]);
-save(i.ID,"Paid","FALSE");
-}
-});
-}
+  do {
+    newDate.setMonth(newDate.getMonth() + 1);
 
-function format(d){
-if(!d) return "";
-return new Date(d).toISOString().split("T")[0];
-}
+    if (newDate.getDate() !== originalDay) {
+      newDate.setDate(0);
+    }
 
-function getStatus(d,paid){
-if(!d||paid) return "";
-const today=new Date();
-const due=new Date(d);
-const diff=(due-today)/(1000*60*60*24);
+    newDate.setHours(0, 0, 0, 0);
+  } while (newDate < new Date().setHours(0, 0, 0, 0));
 
-if(diff<0) return "overdue";
-if(diff<=7) return "upcoming";
-return "";
+  return newDate.toISOString().split("T")[0];
 }
 
-function toggleNewFields(){
-document.querySelectorAll(".bill-only")
-.forEach(el=>el.style.display=newCategory.value==="Bills"?"block":"none");
+function createID(name) {
+  return name
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-|-$/g, "") + "-" + Date.now();
 }
 
+function toggleNewFields() {
+  const show = document.getElementById("newCategory").value === "Bills";
+  document.querySelectorAll(".bill-only").forEach(el => {
+    el.style.display = show ? "block" : "none";
+  });
+}
+
+function formatDate(value) {
+  if (!value) return "";
+  const date = new Date(value);
+  if (isNaN(date)) return value;
+  return date.toISOString().split("T")[0];
+}
+
+function formatFriendlyDate(value) {
+  const date = getDateValue(value);
+  if (!date) return "";
+  return date.toLocaleDateString("en-US", {
+    month: "short",
+    day: "numeric",
+    year: "numeric"
+  });
+}
+
+function getDateValue(value) {
+  if (!value) return null;
+  const date = new Date(value);
+  if (isNaN(date)) return null;
+  return date;
+}
+
+function getDueStatus(value, paid) {
+  if (!value || paid) return { type: "", message: "", className: "" };
+
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+
+  const dueDate = getDateValue(value);
+  if (!dueDate) return { type: "", message: "", className: "" };
+
+  dueDate.setHours(0, 0, 0, 0);
+
+  const diffDays = Math.round((dueDate - today) / (1000 * 60 * 60 * 24));
+
+  if (diffDays < 0) {
+    return {
+      type: "overdue",
+      message: `Overdue by ${Math.abs(diffDays)} day${Math.abs(diffDays) === 1 ? "" : "s"}`,
+      className: "overdue-text"
+    };
+  }
+
+  if (diffDays === 0) {
+    return {
+      type: "upcoming",
+      message: "Due today",
+      className: "upcoming-text"
+    };
+  }
+
+  if (diffDays <= 7) {
+    return {
+      type: "upcoming",
+      message: `Due in ${diffDays} day${diffDays === 1 ? "" : "s"}`,
+      className: "upcoming-text"
+    };
+  }
+
+  return { type: "", message: "", className: "" };
+}
+
+toggleNewFields();
 loadBills();
 </script>
 
