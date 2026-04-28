@@ -35,7 +35,7 @@
       padding-bottom: 8px;
     }
 
-    .card {
+    .card, .add-card {
       background: white;
       border-radius: 12px;
       padding: 15px;
@@ -57,12 +57,19 @@
       align-items: center;
     }
 
+    .add-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+
     .biller {
       font-size: 18px;
       font-weight: bold;
     }
 
-    a.pay-button {
+    a.pay-button,
+    button {
       background: #1a73e8;
       color: white;
       text-decoration: none;
@@ -70,17 +77,36 @@
       border-radius: 8px;
       text-align: center;
       white-space: nowrap;
+      border: none;
+      cursor: pointer;
+      font-size: 15px;
     }
 
-    input[type="date"],
-    input[type="number"],
-    input[type="text"] {
+    button {
+      margin-top: 15px;
+      width: 100%;
+    }
+
+    input,
+    select {
       padding: 8px;
       border: 1px solid #ccc;
       border-radius: 8px;
       font-size: 15px;
       width: 100%;
       box-sizing: border-box;
+    }
+
+    label {
+      font-size: 14px;
+      font-weight: bold;
+      color: #444;
+    }
+
+    .field {
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
     }
 
     .money-box {
@@ -124,9 +150,17 @@
       display: none;
     }
 
+    .add-status {
+      text-align: center;
+      margin-top: 10px;
+      color: #357a38;
+      display: none;
+    }
+
     @media (max-width: 700px) {
       .row,
-      .bank-row {
+      .bank-row,
+      .add-grid {
         grid-template-columns: 1fr;
       }
 
@@ -144,10 +178,57 @@
 
     <div id="status" class="status">Loading bills...</div>
     <div id="app"></div>
+
+    <section>
+      <h2>Add New Account</h2>
+
+      <div class="add-card">
+        <div class="add-grid">
+          <div class="field">
+            <label>Type</label>
+            <select id="newCategory" onchange="toggleNewFields()">
+              <option value="Bills">Bill</option>
+              <option value="Bank Accounts">Bank Account</option>
+            </select>
+          </div>
+
+          <div class="field">
+            <label>Name</label>
+            <input id="newBiller" type="text" placeholder="Example: Duke Energy">
+          </div>
+
+          <div class="field">
+            <label>Website</label>
+            <input id="newWebsite" type="text" placeholder="https://example.com">
+          </div>
+
+          <div class="field bill-only">
+            <label>Due Date</label>
+            <input id="newDueDate" type="date">
+          </div>
+
+          <div class="field bill-only">
+            <label>Amount</label>
+            <div class="money-box">
+              <span>$</span>
+              <input id="newAmount" type="number" step="0.01" placeholder="Amount">
+            </div>
+          </div>
+
+          <div class="field">
+            <label>Notes</label>
+            <input id="newNotes" type="text" placeholder="Optional notes">
+          </div>
+        </div>
+
+        <button onclick="addNewAccount()">Add Account</button>
+        <div id="addStatus" class="add-status">Added successfully</div>
+      </div>
+    </section>
   </div>
 
   <script>
-    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwlCbzsJ8bBL4foJvJJEcTO2PpRZjENYMTZDU_WMf-h-2bwR9M6cwM7f0tWWWS0v4tukw/exec";
+    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyrQvUJoyFMkGR5WERF3W4U4TNaab8yXdiVbHPW7eD_BwkJSSLHMpGpDnfN2ERZB0NnZw/exec";
 
     const app = document.getElementById("app");
     const statusBox = document.getElementById("status");
@@ -281,6 +362,73 @@
       });
     }
 
+    function addNewAccount() {
+      const category = document.getElementById("newCategory").value;
+      const biller = document.getElementById("newBiller").value.trim();
+      const website = document.getElementById("newWebsite").value.trim();
+      const dueDate = document.getElementById("newDueDate").value;
+      const amount = document.getElementById("newAmount").value;
+      const notes = document.getElementById("newNotes").value.trim();
+
+      if (!biller) {
+        alert("Please enter a name.");
+        return;
+      }
+
+      const id = createID(biller);
+
+      fetch(SCRIPT_URL, {
+        method: "POST",
+        body: JSON.stringify({
+          Action: "ADD",
+          ID: id,
+          Category: category,
+          Biller: biller,
+          Website: website,
+          DueDate: category === "Bills" ? dueDate : "",
+          Amount: category === "Bills" ? amount : "",
+          Paid: "FALSE",
+          Notes: notes
+        })
+      })
+      .then(response => response.text())
+      .then(() => {
+        document.getElementById("addStatus").style.display = "block";
+
+        document.getElementById("newBiller").value = "";
+        document.getElementById("newWebsite").value = "";
+        document.getElementById("newDueDate").value = "";
+        document.getElementById("newAmount").value = "";
+        document.getElementById("newNotes").value = "";
+
+        setTimeout(() => {
+          document.getElementById("addStatus").style.display = "none";
+        }, 1500);
+
+        loadBills();
+      })
+      .catch(error => {
+        alert("Could not add account.");
+        console.error(error);
+      });
+    }
+
+    function createID(name) {
+      return name
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, "-")
+        .replace(/^-|-$/g, "") + "-" + Date.now();
+    }
+
+    function toggleNewFields() {
+      const category = document.getElementById("newCategory").value;
+      const billOnlyFields = document.querySelectorAll(".bill-only");
+
+      billOnlyFields.forEach(field => {
+        field.style.display = category === "Bills" ? "flex" : "none";
+      });
+    }
+
     function formatDate(value) {
       if (!value) return "";
       const date = new Date(value);
@@ -288,6 +436,7 @@
       return date.toISOString().split("T")[0];
     }
 
+    toggleNewFields();
     loadBills();
   </script>
 </body>
