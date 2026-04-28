@@ -5,35 +5,11 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
   <style>
-    body {
-      font-family: Arial, sans-serif;
-      background: #f4f6f8;
-      margin: 0;
-      padding: 20px;
-      color: #222;
-    }
-
-    .container {
-      max-width: 900px;
-      margin: auto;
-    }
-
-    h1 {
-      text-align: center;
-      margin-bottom: 5px;
-    }
-
-    .subtitle {
-      text-align: center;
-      color: #666;
-      margin-bottom: 25px;
-    }
-
-    h2 {
-      margin-top: 30px;
-      border-bottom: 2px solid #ddd;
-      padding-bottom: 8px;
-    }
+    body { font-family: Arial, sans-serif; background: #f4f6f8; margin: 0; padding: 20px; color: #222; }
+    .container { max-width: 900px; margin: auto; }
+    h1 { text-align: center; margin-bottom: 5px; }
+    .subtitle { text-align: center; color: #666; margin-bottom: 25px; }
+    h2 { margin-top: 30px; border-bottom: 2px solid #ddd; padding-bottom: 8px; }
 
     .card, .add-card {
       background: white;
@@ -44,19 +20,9 @@
       border-left: 6px solid transparent;
     }
 
-    .overdue {
-      background: #ffecec;
-      border-left-color: #d93025;
-    }
-
-    .upcoming {
-      background: #fff8db;
-      border-left-color: #fbbc04;
-    }
-
-    .paid-card {
-      opacity: 0.75;
-    }
+    .overdue { background: #ffecec; border-left-color: #d93025; }
+    .upcoming { background: #fff8db; border-left-color: #fbbc04; }
+    .paid-card { opacity: 0.75; }
 
     .row {
       display: grid;
@@ -78,10 +44,7 @@
       gap: 12px;
     }
 
-    .biller {
-      font-size: 18px;
-      font-weight: bold;
-    }
+    .biller { font-size: 18px; font-weight: bold; }
 
     .due-label {
       font-size: 13px;
@@ -89,16 +52,10 @@
       margin-top: 8px;
     }
 
-    .overdue-text {
-      color: #d93025;
-    }
+    .overdue-text { color: #d93025; }
+    .upcoming-text { color: #8a6500; }
 
-    .upcoming-text {
-      color: #8a6500;
-    }
-
-    a.pay-button,
-    button {
+    a.pay-button, button {
       background: #1a73e8;
       color: white;
       text-decoration: none;
@@ -111,13 +68,9 @@
       font-size: 15px;
     }
 
-    button {
-      margin-top: 15px;
-      width: 100%;
-    }
+    button { margin-top: 15px; width: 100%; }
 
-    input,
-    select {
+    input, select {
       padding: 8px;
       border: 1px solid #ccc;
       border-radius: 8px;
@@ -138,9 +91,7 @@
       gap: 5px;
     }
 
-    .money-box {
-      position: relative;
-    }
+    .money-box { position: relative; }
 
     .money-box span {
       position: absolute;
@@ -151,57 +102,36 @@
       font-weight: bold;
     }
 
-    .money-box input {
-      padding-left: 24px;
-    }
+    .money-box input { padding-left: 24px; }
 
-    .paid-area {
+    .check-row {
       margin-top: 10px;
       display: flex;
       justify-content: flex-start;
       align-items: center;
-      gap: 8px;
+      gap: 20px;
       width: 100%;
+      flex-wrap: wrap;
     }
 
-    .paid-area input {
+    .check-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .check-item input {
       width: auto;
     }
 
-    .notes {
-      margin-top: 10px;
-    }
-
-    .status {
-      text-align: center;
-      color: #666;
-      margin: 15px 0;
-    }
-
-    .save-msg {
-      font-size: 13px;
-      color: #357a38;
-      margin-top: 8px;
-      display: none;
-    }
-
-    .add-status {
-      text-align: center;
-      margin-top: 10px;
-      color: #357a38;
-      display: none;
-    }
+    .notes { margin-top: 10px; }
+    .status { text-align: center; color: #666; margin: 15px 0; }
+    .save-msg { font-size: 13px; color: #357a38; margin-top: 8px; display: none; }
+    .add-status { text-align: center; margin-top: 10px; color: #357a38; display: none; }
 
     @media (max-width: 700px) {
-      .row,
-      .bank-row,
-      .add-grid {
-        grid-template-columns: 1fr;
-      }
-
-      a.pay-button {
-        display: block;
-      }
+      .row, .bank-row, .add-grid { grid-template-columns: 1fr; }
+      a.pay-button { display: block; }
     }
   </style>
 </head>
@@ -250,6 +180,14 @@
             </div>
           </div>
 
+          <div class="field bill-only">
+            <label>AutoPay</label>
+            <select id="newAutoPay">
+              <option value="FALSE">No</option>
+              <option value="TRUE">Yes</option>
+            </select>
+          </div>
+
           <div class="field">
             <label>Notes</label>
             <input id="newNotes" type="text">
@@ -272,6 +210,7 @@
       fetch(SCRIPT_URL)
         .then(response => response.json())
         .then(data => {
+          autoAdvanceAutopayBills(data);
           statusBox.textContent = "";
           renderBills(data);
         })
@@ -296,11 +235,9 @@
           categoryItems.sort((a, b) => {
             const dateA = getDateValue(a.DueDate);
             const dateB = getDateValue(b.DueDate);
-
             if (!dateA && !dateB) return 0;
             if (!dateA) return 1;
             if (!dateB) return -1;
-
             return dateA - dateB;
           });
         }
@@ -325,19 +262,12 @@
             `;
           } else {
             const paid = String(item.Paid).toUpperCase() === "TRUE";
+            const autopay = String(item.AutoPay).toUpperCase() === "TRUE";
             const dueStatus = getDueStatus(item.DueDate, paid);
 
-            if (dueStatus.type === "overdue") {
-              card.classList.add("overdue");
-            }
-
-            if (dueStatus.type === "upcoming") {
-              card.classList.add("upcoming");
-            }
-
-            if (paid) {
-              card.classList.add("paid-card");
-            }
+            if (dueStatus.type === "overdue") card.classList.add("overdue");
+            if (dueStatus.type === "upcoming") card.classList.add("upcoming");
+            if (paid) card.classList.add("paid-card");
 
             card.innerHTML = `
               <div class="row">
@@ -357,11 +287,20 @@
 
               ${dueStatus.message ? `<div class="due-label ${dueStatus.className}">${dueStatus.message}</div>` : ""}
 
-              <div class="paid-area">
-                <input type="checkbox"
-                ${paid ? "checked" : ""}
-                onchange="saveField('${item.ID}','Paid',this.checked?'TRUE':'FALSE',this)">
-                <label>Paid</label>
+              <div class="check-row">
+                <div class="check-item">
+                  <input type="checkbox"
+                  ${paid ? "checked" : ""}
+                  onchange="saveField('${item.ID}','Paid',this.checked?'TRUE':'FALSE',this)">
+                  <label>Paid</label>
+                </div>
+
+                <div class="check-item">
+                  <input type="checkbox"
+                  ${autopay ? "checked" : ""}
+                  onchange="saveField('${item.ID}','AutoPay',this.checked?'TRUE':'FALSE',this)">
+                  <label>AutoPay</label>
+                </div>
               </div>
 
               <div class="notes">
@@ -378,6 +317,47 @@
 
         app.appendChild(section);
       });
+    }
+
+    function autoAdvanceAutopayBills(items) {
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+
+      items.forEach(item => {
+        const isBill = item.Category === "Bills";
+        const isAutoPay = String(item.AutoPay).toUpperCase() === "TRUE";
+        const dueDate = getDateValue(item.DueDate);
+
+        if (!isBill || !isAutoPay || !dueDate) return;
+
+        dueDate.setHours(0, 0, 0, 0);
+
+        if (dueDate < today) {
+          const nextDate = getNextMonthDate(dueDate);
+          item.DueDate = nextDate;
+          item.Paid = "FALSE";
+
+          fetch(SCRIPT_URL, {
+            method: "POST",
+            body: JSON.stringify({
+              ID: item.ID,
+              DueDate: nextDate,
+              Paid: "FALSE"
+            })
+          });
+        }
+      });
+    }
+
+    function getNextMonthDate(date) {
+      let newDate = new Date(date);
+      newDate.setMonth(newDate.getMonth() + 1);
+
+      while (newDate < new Date().setHours(0, 0, 0, 0)) {
+        newDate.setMonth(newDate.getMonth() + 1);
+      }
+
+      return newDate.toISOString().split("T")[0];
     }
 
     function saveField(id, field, value, element) {
@@ -419,6 +399,7 @@
           DueDate: category === "Bills" ? document.getElementById("newDueDate").value : "",
           Amount: category === "Bills" ? document.getElementById("newAmount").value : "",
           Paid: "FALSE",
+          AutoPay: category === "Bills" ? document.getElementById("newAutoPay").value : "",
           Notes: document.getElementById("newNotes").value.trim()
         })
       })
@@ -429,6 +410,7 @@
         document.getElementById("newWebsite").value = "";
         document.getElementById("newDueDate").value = "";
         document.getElementById("newAmount").value = "";
+        document.getElementById("newAutoPay").value = "FALSE";
         document.getElementById("newNotes").value = "";
 
         setTimeout(() => {
@@ -472,9 +454,7 @@
     }
 
     function getDueStatus(value, paid) {
-      if (!value || paid) {
-        return { type: "", message: "", className: "" };
-      }
+      if (!value || paid) return { type: "", message: "", className: "" };
 
       const today = new Date();
       today.setHours(0, 0, 0, 0);
@@ -482,12 +462,9 @@
       const dueDate = new Date(value);
       dueDate.setHours(0, 0, 0, 0);
 
-      if (isNaN(dueDate)) {
-        return { type: "", message: "", className: "" };
-      }
+      if (isNaN(dueDate)) return { type: "", message: "", className: "" };
 
-      const diffTime = dueDate - today;
-      const diffDays = Math.round(diffTime / (1000 * 60 * 60 * 24));
+      const diffDays = Math.round((dueDate - today) / (1000 * 60 * 60 * 24));
 
       if (diffDays < 0) {
         return {
